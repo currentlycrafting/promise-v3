@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Reframe Promise</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Reframe Promise</h1>
+      </div>
+
+      <div class="card">
+        <h2>Missed Promise</h2>
+        <div class="title">{{ promise.name }} ({{ promise.promise_type }})</div>
+        <div class="muted">{{ promise.content }}</div>
+      </div>
+
+      {% if not solutions %}
+      <div class="card">
+        <h2>Step 1: Why & Category</h2>
+        <form action="/reframe/{{ promise.id }}/solutions" method="post">
+          <label>Why did you miss this promise?</label>
+          <input type="text" name="reason" required />
+          <label>Category</label>
+          <select name="category" required>
+            <option value="TIME_CONSTRAINT">TIME_CONSTRAINT</option>
+            <option value="RESOURCE_LIMITATION">RESOURCE_LIMITATION</option>
+            <option value="EXTERNAL_FACTORS">EXTERNAL_FACTORS</option>
+            <option value="MOTIVATION_LOSS">MOTIVATION_LOSS</option>
+            <option value="UNCLEAR_GOALS">UNCLEAR_GOALS</option>
+            <option value="OVERCOMMITMENT">OVERCOMMITMENT</option>
+            <option value="SKILL_GAP">SKILL_GAP</option>
+          </select>
+          <button type="submit">Generate Solutions</button>
+        </form>
+      </div>
+      {% endif %}
+
+      {% if solutions %}
+      <div class="card">
+        <h2>Step 2: Pick a Solution</h2>
+        <pre class="solutions">{{ solutions }}</pre>
+
+        <form action="/reframe/{{ promise.id }}/apply" method="post">
+          <input type="hidden" name="reason" value="{{ reason }}" />
+          <input type="hidden" name="category" value="{{ category }}" />
+          <label>Pick a solution</label>
+          <select name="solution" required>
+            <option value="1">Conservative</option>
+            <option value="2">Moderate</option>
+            <option value="3">Progressive</option>
+          </select>
+          <button type="submit">Apply Selected Solution</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </body>
+</html>
