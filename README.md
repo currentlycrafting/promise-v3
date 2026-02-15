@@ -17,10 +17,9 @@ Promise Tracker is a commitment accountability platform that enables users to ma
 - **Example**: "Salman will exercise 3 times per week for the next month"
 
 #### 2. **Promise to Others**
-- **Definition**: Commitments made to specific individuals (2-way, 3-way, or N-way)
+- **Definition**: Commitments made to specific individuals (2-way)
 - **Completion Requirements**:
   - **2-way**: Both creator and participant must accept completion
-  - **3-way**: All three parties must accept
 - **Notifications**: All participants notified + app reminders
 - **Privacy**: Can be private or public. If private the global live feed will say Annoymous created a promise otherwise it'll be Salman created a promise to Khalid
 - **Example**: "I will complete the project report with John and Sarah by Friday"
@@ -47,21 +46,22 @@ Promise Tracker is a commitment accountability platform that enables users to ma
 
 **Validation**:
 - Must have at least one participant for "others" type
-- Deadline must be in the future
+- Deadline must be in the future -> Minimum promise length:
+- Self; 1 hr min
+- Other: 1 hr
+- World: 1 day 
 - Maximum revision limit set at creation (default: 3)
 
 ### 2. Multi-Party Acceptance System
 
-#### 2-Way & 3-Way Promises
+#### 2-Way
 ```
 Completion Flow:
 1. Creator marks promise as complete
 2. System notifies all participants
-3. Each participant votes YES/NO with optional note
-4. Status updates based on unanimous agreement:
+3. Status updates based on unanimous agreement:
    - All YES → Promise marked COMPLETED
    - Any NO → Promise remains PENDING with feedback
-   - Participants can discuss and re-vote
 ```
 
 ### 3. Live Feed System
@@ -69,33 +69,32 @@ Completion Flow:
 #### Global Feed (Main Page)
 **Displays**:
 - All public "world" promises (real-time)
-- Completed public promises (any type)
-- Milestone achievements
-- Anonymous user statistics
+- All Private world promises: "Anonymous User made a promise", "Anonymous User completed a promise"
+- Completed public promises (any type and private promises)
+- His/Hers: pronouns
 
 **Feed Entry Types**:
 ```
 - CREATED: "Anonymous user committed to running a marathon"
-- COMPLETED: "Khalid completed their 30-day meditation challenge"
+- COMPLETED: "Khalid completed his promise to meditate"
 - REVISED: "Khalid's promise was refined after missing deadline"
 - MILESTONE: "Anonymous user reached 50% of their goal"
 - TERMINATED: "Anonymous user promise was terminated after 5 revision attempts"
 ```
 
 **Filtering Options**:
+- ONLY FOR USER PROFILE
 - By promise type
 - By completion status
 - By time period
-- By category
-- Most engaging promises
 
 #### Personal Feed
 - User's own promises
 - Promises they're participating in
 - Private promises (visible only to user)
-- Revision history
+- Revision history(TBD)
 
-### 4. AI-Powered Promise Reframing
+### 4.Promise Reframing
 
 #### Trigger Event
 When a promise is marked as "MISSED" (deadline passed without completion)
@@ -105,11 +104,9 @@ When a promise is marked as "MISSED" (deadline passed without completion)
 Step 1: WHY Analysis
 ├─ System asks: "Why did you miss this promise?"
 ├─ User provides detailed explanation
-└─ LLM processes response
 
 Step 2: Categorization
-├─ LLM analyzes user's reason
-├─ Categorizes into failure type:
+├─ Systems asks user to categorizes into failure type:
 │   ├─ TIME_CONSTRAINT: "Not enough time"
 │   ├─ RESOURCE_LIMITATION: "Lacked money/tools/support"
 │   ├─ EXTERNAL_FACTORS: "Unexpected events"
@@ -117,7 +114,7 @@ Step 2: Categorization
 │   ├─ UNCLEAR_GOALS: "Goal was too vague"
 │   ├─ OVERCOMMITMENT: "Took on too much"
 │   └─ SKILL_GAP: "Lacked necessary skills"
-└─ Category stored for analytics
+└─ LLM processes response
 
 Step 3: Solution Generation
 ├─ System uses category-specific prompts
@@ -129,14 +126,13 @@ Step 3: Solution Generation
     ├─ Revised promise text
     ├─ New deadline
     ├─ Why this approach works
-    └─ Specific actionable steps
 
 Step 4: Selection & Update
 ├─ User reviews all 3 solutions
-├─ Selects one (or combines elements)
-├─ New promise created (linked to original)
-├─ Revision count incremented
-└─ Participants notified (if applicable)
+├─ Selects one 
+├─ Promise update (overrides originla promise, old is updated but not completely replaced)
+├─ Revision count incremented(not needed, but will be used as data for profile)
+└─ TBD: no revisions for 2-way promises, failed 2-way promises are terminated. (original idea ; Participants notified (only for 2 way promises))
 ```
 
 #### Example Reframing Session
@@ -154,22 +150,19 @@ Solution 1 (Conservative):
 - Promise: "Salman will complete Duolingo Spanish Level 5 in 3 months"
 - Rationale: Specific, measurable, requires 30 min/day
 - Timeline: 90 days
-- Steps: 30 min daily practice, no fluency pressure
 
 Solution 2 (Moderate):
 - Promise: "Salman will achieve B1 Spanish conversational level in 6 months"
 - Rationale: Realistic timeline with work schedule
 - Timeline: 180 days
-- Steps: 1 hour 3x/week + weekly conversation practice
 
 Solution 3 (Creative):
 - Promise: "Salman will have 30-minute Spanish conversations monthly for 6 months"
 - Rationale: Focus on practical use, less pressure
 - Timeline: 6 months
-- Steps: Find language partner, monthly video calls
 ```
 
-### 5. Notification System
+### 5. Notification System (TBD)
 
 **For Promises to Self**:
 ```
@@ -198,7 +191,7 @@ Solution 3 (Creative):
   - Auto-escalation suggestion: "You completed X, now try Y!"
 ```
 
-#### Notification Preferences
+#### Notification Preferences (TBD)
 Users can customize:
 - Notification frequency (in settings)
 - In-app channel
@@ -214,12 +207,6 @@ Promise Timer Components:
 │   ├─ Days/Hours/Minutes remaining
 │   ├─ Visual progress bar
 │   └─ Percentage complete
-│
-├─ Milestone Tracking
-│   ├─ Optional sub-deadlines
-│   ├─ Progress checkpoints
-│   └─ Partial completion tracking
-│
 └─ Deadline Actions
     ├─ Auto-mark as missed if deadline passes
     ├─ Grace period option (24-48 hours)
