@@ -4,24 +4,71 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Promise</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:sans-serif}
-nav{display:flex;justify-content:space-between;align-items:center;padding:16px 24px}
-nav a{text-decoration:none;color:inherit}
-.hero{padding:64px 24px;max-width:720px}
-h1{font-size:2.5rem;margin-bottom:16px}
-p{line-height:1.6}
-</style>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/nav.css">
+<link rel="stylesheet" href="css/hero.css">
+<link rel="stylesheet" href="css/feed.css">
+<link rel="stylesheet" href="css/sections.css">
 </head>
 <body>
-<nav>
-<a href="#">Promise.</a>
-<div><a href="#">Log In</a> <a href="#">Get Started</a></div>
+
+<nav id="nav">
+  <a class="wordmark" href="#">Promise<span class="dot">.</span></a>
+  <div class="nav-r">
+    <a href="#">Log In</a>
+    <a href="#" class="btn">Make a Promise</a>
+  </div>
 </nav>
-<main class="hero">
-<h1>Promise</h1>
-<p>You make promises, We help you keep 'em</p>
+
+<main>
+  <section class="hero">
+    <div class="hero-left">
+      <h1>A promise you<br>actually keep<span class="dot">.</span></h1>
+      <p>Track commitments to yourself, to others, or to the world.</p>
+      <a href="#" class="btn">Make a Promise</a>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span>PROMISE_FEED // LIVE</span>
+        <span class="live"><span class="live-dot"></span> LIVE</span>
+      </div>
+      <div class="feed">
+        <div class="feed-scroll" id="fs">
+          <div id="fl">
+            <div class="fe"><span class="t">[14:23]</span><span class="a completed">COMPLETED</span><span class="tx">"Run a half marathon"</span><span class="u">Sarah</span></div>
+            <div class="fe"><span class="t">[14:23]</span><span class="a created">CREATED</span><span class="tx">"Promise to Self"</span><span class="u">Anonymous</span></div>
+            <div class="fe"><span class="t">[14:24]</span><span class="a completed">COMPLETED</span><span class="tx">"Ship MVP with Kai"</span><span class="u">James</span></div>
+            <div class="fe"><span class="t">[14:24]</span><span class="a revised">REVISED</span><span class="tx">"Learn piano"</span><span class="u">Anonymous</span></div>
+            <div class="fe"><span class="t">[14:25]</span><span class="a created">CREATED</span><span class="tx">"Volunteer monthly"</span><span class="u">Priya</span></div>
+            <div class="fe"><span class="t">[14:25]</span><span class="a completed">COMPLETED</span><span class="tx">"30 days meditation"</span><span class="u">Lena</span></div>
+            <div class="fe"><span class="t">[14:26]</span><span class="a created">CREATED</span><span class="tx">"Read 12 books"</span><span class="u">Omar</span></div>
+            <div class="fe"><span class="t">[14:26]</span><span class="a completed">COMPLETED</span><span class="tx">"Capstone project"</span><span class="u">David</span></div>
+            <div class="fe"><span class="t">[14:27]</span><span class="a revised">REVISED</span><span class="tx">"Save $5000"</span><span class="u">Anonymous</span></div>
+            <div class="fe"><span class="t">[14:27]</span><span class="a created">CREATED</span><span class="tx">"Cook 3x a week"</span><span class="u">Mia</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="types">
+    <div><h3>To Yourself</h3><p>Private by default.</p></div>
+    <span class="sep">&middot;</span>
+    <div><h3>To Others</h3><p>Everyone confirms completion.</p></div>
+    <span class="sep">&middot;</span>
+    <div><h3>To the World</h3><p>Public. Get challenged to go bigger.</p></div>
+  </section>
 </main>
+
+<footer>
+  <span>&copy; 2026 Promise.</span>
+  <div><a href="#">Privacy</a><a href="#">Terms</a></div>
+</footer>
+
+<script>
+window.addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('scrolled',scrollY>10)},{passive:true});
+const s=document.getElementById('fs'),l=document.getElementById('fl');s.appendChild(l.cloneNode(true));
+</script>
 </body>
 </html>

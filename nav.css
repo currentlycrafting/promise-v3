@@ -1,0 +1,42 @@
+/* Nav */
+
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 48px;
+  border-bottom: 1px solid var(--border);
+  transition: box-shadow 0.3s;
+}
+
+nav.scrolled {
+  box-shadow: 0 2px 12px rgba(26, 26, 46, 0.06);
+}
+
+.wordmark {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.wordmark .dot {
+  color: var(--accent);
+}
+
+.nav-r {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-r a {
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 500;
+}
