@@ -3,117 +3,55 @@ import os
 import re
 import time
 
-from fastapi import FastAPI
-from fastapi import Depends
-from fastapi import Form
-from fastapi import HTTPException
-from fastapi import Request
-from fastapi.responses import HTMLResponse
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, Depends, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-from sqlalchemy import Column
-from sqlalchemy import Integer
-from sqlalchemy import String
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker
-
-from gemini_client import refine_promise
-from gemini_client import generate_updated_promise
-from gemini_client import format_new_promise
-from gemini_client import refine_promise 
-import time 
-
-promise = input("Enter a promise: ") #"I want to work out for 2 hours eevry single day"
-print("Choose a timer:")
-print("1. 5 seconds")
-print("2. 10 seconds")
-print("3. 15 seconds")
-promise_time = input("Enter 1,2, or 3: ")
-
-
-if promise_time == "1":
-    seconds = 5
-elif promise-time == "2":
-    seconds = 10
-elif promise-time == "3":
-    seconds = 15
-else:
-    print('Invalid Choice')
-    exit()
-
-
-time.sleep(seconds)
-
-update = input("Did you keep your promise?(Y/N): ")
-
-
-if update == "n" or update == "N":
-    issue =input("Enter the issue you currently have with acheiving this promise: ") #"I have too many things in my agenda"
-    print("Pick which category you feel like this issue is apart of. Choose 1,2,or 3: \n 1. Time \n 2. Lack of Resource(s) \n 3. Too much friction \n ")
-    pre_category = input("Enter 1,2, or 3: ")
-
-CATEGORY_MAP = {
-    "1": "TIME_CONSTRAINT",
-    "2": "RESOURCE_LIMITATION",
-    "3": "EXTERNAL_FACTORS",
-    "4": "MOTIVATION_LOSS",
-    "5": "UNCLEAR_GOALS",
-    "6": "OVERCOMMITMENT",
-    "7": "SKILL_GAP",
-}
-
-PROMISE_TYPES = {
-    "self": "self",
-    "others": "others",
-    "other": "others",
-    "world": "world",
-}
-
-    if int(pre_category) == 1:
-        category = "Time"
-    elif int(pre_category) == 2:
-        category = "Lack of Resource(s)"
-    elif int(pre_category) == 3:
-        category = "Too much friction"
-    else:
-        print('Not a valid option')
-    print(refine_promise(promise, issue, category))
-
-elif update == "y" or update == "Y":
-    print("Promise kept!")
-
-else:
-    print('Invalid option')
-
+# ── DB setup ────────────────────────────────────────────────────────────────
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./promises.db")
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+PROMISE_TYPES = {"self": "self", "others": "others", "other": "others", "world": "world"}
 
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+# ── Models ───────────────────────────────────────────────────────────────────
 
 class Promise(Base):
     __tablename__ = "promises"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
+    id          = Column(Integer, primary_key=True, index=True)
+    name        = Column(String)
     promise_type = Column(String)
-    content = Column(String)
-    created_at = Column(Integer)
+    content     = Column(String)
+    created_at  = Column(Integer)
     deadline_at = Column(Integer)
-    status = Column(String)
-    hash_value = Column(String)
-
+    status      = Column(String)
+    hash_value  = Column(String)
 
 Base.metadata.create_all(bind=engine)
 
+# ── App ──────────────────────────────────────────────────────────────────────
+
+app = FastAPI()
+
+# Allow the Vite dev server (port 5173) to call FastAPI (port 8000)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:4173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
 
 def get_db():
     db = SessionLocal()
@@ -125,275 +63,166 @@ def get_db():
 def now_seconds():
     return int(time.time())
 
-
-def parse_duration(value):
-    text = ""
-    if value:
-        text = value
-    text = text.strip().lower()
-    if text == "":
+def parse_duration(value: str | None):
+    text = (value or "").strip().lower()
+    if not text:
         return None
-
-    total = 0
     matches = re.findall(r"(\d+)\s*(h|m|s)", text)
     if not matches:
         return None
+    total = sum(
+        int(a) * (3600 if u == "h" else 60 if u == "m" else 1)
+        for a, u in matches
+    )
+    return total or None
 
-    for amount, unit in matches:
-        amount = int(amount)
-        if unit == "h":
-            total += amount * 3600
-        elif unit == "m":
-            total += amount * 60
-        else:
-            total += amount
-
-    if total > 0:
-        return total
-    return None
-
-
-def format_duration(total_seconds):
-    hours = total_seconds // 3600
-    remaining_seconds = total_seconds % 3600
-    minutes = remaining_seconds // 60
-    seconds = remaining_seconds % 60
-    parts = []
-    if hours:
-        parts.append(f"{hours}h")
-    if minutes:
-        parts.append(f"{minutes}m")
-    if seconds or not parts:
-        parts.append(f"{seconds}s")
+def format_duration(total_seconds: int) -> str:
+    h, rem = divmod(total_seconds, 3600)
+    m, s   = divmod(rem, 60)
+    parts  = []
+    if h: parts.append(f"{h}h")
+    if m: parts.append(f"{m}m")
+    if s or not parts: parts.append(f"{s}s")
     return " ".join(parts)
-
-
-def parse_update(text):
-    name = ""
-    promise = ""
-    deadline = ""
-    lines_text = ""
-    if text:
-        lines_text = text
-    for line in lines_text.splitlines():
-        line = line.strip()
-        if line.lower().startswith("name:"):
-            name = line.split(":", 1)[1].strip()
-        elif line.lower().startswith("promise:"):
-            promise = line.split(":", 1)[1].strip()
-        elif line.lower().startswith("deadline:"):
-            deadline = line.split(":", 1)[1].strip()
-    return name, promise, deadline
-
-
-def parse_create(text):
-    name = ""
-    promise_type = ""
-    promise = ""
-    lines_text = ""
-    if text:
-        lines_text = text
-    for line in lines_text.splitlines():
-        line = line.strip()
-        if line.lower().startswith("name:"):
-            name = line.split(":", 1)[1].strip()
-        elif line.lower().startswith("type:"):
-            promise_type = line.split(":", 1)[1].strip().lower()
-        elif line.lower().startswith("promise:"):
-            promise = line.split(":", 1)[1].strip()
-    return name, promise_type, promise
-
 
 def hash_promise(promise_id, created_at, name, promise_type, content):
     base = f"{promise_id}|{created_at}|{name}|{promise_type}|{content}"
-    return hashlib.sha256(base.encode("utf-8")).hexdigest()
-
+    return hashlib.sha256(base.encode()).hexdigest()
 
 def get_dashboard_state(db):
     now = now_seconds()
-    active_promises = db.query(Promise).filter(Promise.status == "ACTIVE").all()
-    for promise in active_promises:
-        if promise.deadline_at <= now:
-            promise.status = "MISSED"
+    for p in db.query(Promise).filter(Promise.status == "ACTIVE").all():
+        if p.deadline_at <= now:
+            p.status = "MISSED"
     db.commit()
+    missed  = db.query(Promise).filter(Promise.status == "MISSED").order_by(Promise.deadline_at).first()
+    active  = db.query(Promise).filter(Promise.status == "ACTIVE").order_by(Promise.deadline_at).all()
+    for p in active:
+        tl = max(p.deadline_at - now, 0)
+        p.time_left = format_duration(tl)
+    return active, missed
 
-    missed_promise = db.query(Promise).filter(Promise.status == "MISSED").order_by(Promise.deadline_at.asc()).first()
-    display_promises = db.query(Promise).filter(Promise.status == "ACTIVE").order_by(Promise.deadline_at.asc()).all()
-    for promise in display_promises:
-        time_left = promise.deadline_at - now
-        if time_left < 0:
-            time_left = 0
-        promise.time_left = format_duration(time_left)
-    return display_promises, missed_promise
-
+# ── Pages (keep for legacy / Jinja2 dashboard) ───────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
-def index(request: Request, db=Depends(get_db)):
+def index(request: Request):
     return RedirectResponse("/dashboard", status_code=302)
-
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, db=Depends(get_db)):
-    display_promises, missed_promise = get_dashboard_state(db)
-    if missed_promise:
+    display, missed = get_dashboard_state(db)
+    if missed:
         return RedirectResponse("/reframe", status_code=302)
-
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
-            "promises": display_promises,
-            "error": "",
-        }
-    )
-
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request, "promises": display, "error": ""
+    })
 
 @app.get("/reframe", response_class=HTMLResponse)
 def reframe_page(request: Request, db=Depends(get_db)):
-    display_promises, missed_promise = get_dashboard_state(db)
-    if not missed_promise:
+    display, missed = get_dashboard_state(db)
+    if not missed:
         return RedirectResponse("/dashboard", status_code=302)
-    return templates.TemplateResponse(
-        "reframe.html",
-        {
-            "request": request,
-            "promise": missed_promise,
-            "solutions": "",
-            "reason": "",
-            "category": "",
-            "error": "",
-        }
-    )
+    return templates.TemplateResponse("reframe.html", {
+        "request": request, "promise": missed,
+        "solutions": "", "reason": "", "category": "", "error": ""
+    })
 
+# ── JSON API (called by the Vite frontend) ────────────────────────────────────
 
-@app.post("/promises")
-def create_promise(
-    request: Request,
-    raw_text: str = Form(...),
+@app.get("/api/promises")
+def api_list_promises(db=Depends(get_db)):
+    active, missed = get_dashboard_state(db)
+    return {
+        "promises": [
+            {
+                "id": p.id, "name": p.name, "content": p.content,
+                "promise_type": p.promise_type, "status": p.status,
+                "deadline_at": p.deadline_at,
+                "time_left": getattr(p, "time_left", ""),
+            }
+            for p in active
+        ],
+        "missed": {
+            "id": missed.id, "name": missed.name, "content": missed.content,
+            "promise_type": missed.promise_type, "status": missed.status,
+            "deadline_at": missed.deadline_at,
+        } if missed else None,
+    }
+
+@app.post("/api/promises")
+def api_create_promise(
+    name: str = Form(...),
+    promise_type: str = Form(...),
+    content: str = Form(...),
     deadline: str = Form(...),
     db=Depends(get_db),
 ):
-    formatted = format_new_promise(raw_text)
-    parsed = parse_create(formatted)
-    name = parsed[0]
-    promise_type = parsed[1]
-    content = parsed[2]
+    """
+    The frontend now handles LLM formatting via RunAnywhere.
+    It sends already-structured fields (name, type, content) here.
+    """
     if promise_type not in PROMISE_TYPES.values():
         promise_type = "self"
 
-    if not name or not promise_type or not content:
-        raise HTTPException(status_code=400, detail="Failed to format promise")
+    deadline_seconds = parse_duration(deadline)
+    if not deadline_seconds:
+        raise HTTPException(status_code=400, detail="Invalid deadline format e.g. 1h 30m")
+
+    created_at = now_seconds()
+    deadline_at = created_at + deadline_seconds
+
+    p = Promise(
+        name=name, promise_type=promise_type, content=content,
+        created_at=created_at, deadline_at=deadline_at,
+        status="ACTIVE",
+        hash_value=hash_promise(0, created_at, name, promise_type, content),
+    )
+    db.add(p); db.commit()
+    p.hash_value = hash_promise(p.id, created_at, name, promise_type, content)
+    db.commit()
+    return {"id": p.id, "status": "created"}
+
+@app.post("/api/promises/{promise_id}/complete")
+def api_complete_promise(promise_id: int, db=Depends(get_db)):
+    p = db.query(Promise).filter(Promise.id == promise_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Not found")
+    p.status = "COMPLETED"
+    db.commit()
+    return {"status": "completed"}
+
+@app.post("/api/reframe/{promise_id}/apply")
+def api_apply_reframe(
+    promise_id: int,
+    name: str = Form(...),
+    content: str = Form(...),
+    deadline: str = Form(...),
+    db=Depends(get_db),
+):
+    """
+    Frontend calls RunAnywhere to generate + let user pick a solution,
+    then sends the chosen structured fields here to save.
+    """
+    promise = db.query(Promise).filter(Promise.id == promise_id).first()
+    if not promise:
+        raise HTTPException(status_code=404, detail="Not found")
 
     deadline_seconds = parse_duration(deadline)
     if not deadline_seconds:
-        raise HTTPException(status_code=400, detail="Invalid deadline format")
+        raise HTTPException(status_code=400, detail="Invalid deadline")
 
-    created_at = now_seconds()
+    created_at  = now_seconds()
     deadline_at = created_at + deadline_seconds
-    hash_value = hash_promise(0, created_at, name, promise_type, content)
 
-    promise = Promise(
-        name=name,
-        promise_type=promise_type,
-        content=content,
-        created_at=created_at,
-        deadline_at=deadline_at,
+    new_p = Promise(
+        name=name, promise_type=promise.promise_type, content=content,
+        created_at=created_at, deadline_at=deadline_at,
         status="ACTIVE",
-        hash_value=hash_value,
+        hash_value=hash_promise(0, created_at, name, promise.promise_type, content),
     )
-    db.add(promise)
-    db.commit()
-
-    promise.hash_value = hash_promise(promise.id, created_at, name, promise_type, content)
-    db.commit()
-    return RedirectResponse("/dashboard", status_code=302)
-
-
-@app.post("/promises/{promise_id}/complete")
-def complete_promise(request: Request, promise_id: int, db=Depends(get_db)):
-    promise = db.query(Promise).filter(Promise.id == promise_id).first()
-    if promise:
-        promise.status = "COMPLETED"
-        db.commit()
-    return RedirectResponse("/dashboard", status_code=302)
-
-
-@app.post("/reframe/{promise_id}/solutions", response_class=HTMLResponse)
-def generate_solutions(
-    request: Request,
-    promise_id: int,
-    reason: str = Form(...),
-    category: str = Form(...),
-    db=Depends(get_db),
-):
-    promise = db.query(Promise).filter(Promise.id == promise_id).first()
-    if not promise:
-        raise HTTPException(status_code=404, detail="Promise not found")
-
-    solutions = refine_promise(promise.content, reason, category)
-    display_promises, missed_promise = get_dashboard_state(db)
-    if not missed_promise or missed_promise.id != promise.id:
-        missed_promise = promise
-
-    return templates.TemplateResponse(
-        "reframe.html",
-        {
-            "request": request,
-            "promise": missed_promise,
-            "solutions": solutions,
-            "reason": reason,
-            "category": category,
-            "error": "",
-        }
-    )
-
-
-@app.post("/reframe/{promise_id}/apply")
-def apply_reframe(
-    request: Request,
-    promise_id: int,
-    solution: str = Form(...),
-    reason: str = Form(...),
-    category: str = Form(...),
-    db=Depends(get_db),
-):
-    promise = db.query(Promise).filter(Promise.id == promise_id).first()
-    if not promise:
-        raise HTTPException(status_code=404, detail="Promise not found")
-
-    solution_label = "Conservative"
-    if solution == "2":
-        solution_label = "Moderate"
-    if solution == "3":
-        solution_label = "Progressive"
-
-    update_text = generate_updated_promise(promise.content, reason, category, solution_label)
-    parsed = parse_update(update_text)
-    name = parsed[0]
-    new_content = parsed[1]
-    new_deadline = parsed[2]
-
-    deadline_seconds = parse_duration(new_deadline)
-    if not name or not new_content or not deadline_seconds:
-        raise HTTPException(status_code=400, detail="Failed to parse update")
-
-    created_at = now_seconds()
-    deadline_at = created_at + deadline_seconds
-    hash_value = hash_promise(0, created_at, name, promise.promise_type, new_content)
-
-    new_promise = Promise(
-        name=name,
-        promise_type=promise.promise_type,
-        content=new_content,
-        created_at=created_at,
-        deadline_at=deadline_at,
-        status="ACTIVE",
-        hash_value=hash_value,
-    )
-    db.add(new_promise)
+    db.add(new_p)
     db.delete(promise)
     db.commit()
-
-    new_promise.hash_value = hash_promise(new_promise.id, created_at, name, promise.promise_type, new_content)
+    new_p.hash_value = hash_promise(new_p.id, created_at, name, promise.promise_type, content)
     db.commit()
-    return RedirectResponse("/dashboard", status_code=302)
+    return {"id": new_p.id, "status": "reframed"}
