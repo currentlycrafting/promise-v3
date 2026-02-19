@@ -67,11 +67,11 @@ def parse_duration(value: str | None):
     text = (value or "").strip().lower()
     if not text:
         return None
-    matches = re.findall(r"(\d+)\s*(h|m|s)", text)
+    matches = re.findall(r"(\d+)\s*(d|h|m|s)", text)
     if not matches:
         return None
     total = sum(
-        int(a) * (3600 if u == "h" else 60 if u == "m" else 1)
+        int(a) * (86400 if u == "d" else 3600 if u == "h" else 60 if u == "m" else 1)
         for a, u in matches
     )
     return total or None

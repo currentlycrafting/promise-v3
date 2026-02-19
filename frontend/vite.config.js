@@ -1,6 +1,13 @@
 import { defineConfig } from 'vite'
+import path from 'path'
 
 export default defineConfig({
+  // Serve from project root so HTML files at root level work
+  root: path.resolve(__dirname, '..'),
+
+  // Static assets (model files) served from frontend/public
+  publicDir: path.resolve(__dirname, 'public'),
+
   // Serve WASM files as static assets
   assetsInclude: ['**/*.wasm'],
 
@@ -17,6 +24,14 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
+    },
+  },
+
+  resolve: {
+    alias: {
+      // Allow bare imports to resolve from frontend/node_modules
+      '@runanywhere/web': path.resolve(__dirname, 'node_modules/@runanywhere/web'),
+      '@runanywhere/web-llamacpp': path.resolve(__dirname, 'node_modules/@runanywhere/web-llamacpp'),
     },
   },
 })

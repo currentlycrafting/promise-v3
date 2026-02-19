@@ -1,14 +1,31 @@
 // llm.js — replaces gemini_client.py
 // Runs entirely in the browser via RunAnywhere Web SDK (no API key needed)
 
-import { RunAnywhere, TextGeneration } from '@runanywhere/web'
+import { RunAnywhere } from '@runanywhere/web'
+import { LlamaCPP, TextGeneration } from '@runanywhere/web-llamacpp'
+import { LlamaCppBridge } from '@runanywhere/web-llamacpp/dist/Foundation/LlamaCppBridge'
 
 let initialized = false
 
-export async function initLLM(modelPath = '/models/model.gguf', modelId = 'promise-model') {
+export async function initLLM(modelUrl = '/models/model.gguf', modelId = 'promise-model') {
   if (initialized) return
-  await RunAnywhere.initialize({ environment: 'development', debug: false })
-  await TextGeneration.loadModel(modelPath, modelId)
+
+  await RunAnywhere.initialize({ environment: 'development', debug: true })
+  await LlamaCPP.register()
+
+  // Fetch model file via HTTP and write to Emscripten virtual FS
+  console.log('[Promise LLM] Fetching model from', modelUrl)
+  const response = await fetch(modelUrl)
+  if (!response.ok) throw new Error(`Failed to fetch model: ${response.status}`)
+  const data = new Uint8Array(await response.arrayBuffer())
+  console.log(`[Promise LLM] Model fetched (${(data.length / 1024 / 1024).toFixed(1)} MB), writing to WASM FS`)
+
+  const bridge = LlamaCppBridge.shared
+  const wasmPath = `/models/${modelId}.gguf`
+  bridge.writeFile(wasmPath, data)
+
+  await TextGeneration.loadModel(wasmPath, modelId)
+  console.log('[Promise LLM] Model loaded successfully')
   initialized = true
 }
 

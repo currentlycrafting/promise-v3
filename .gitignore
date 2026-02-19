@@ -27,5 +27,10 @@ build/
 # Logs and local config
 *.log
 *.local
-*.gitignore
+
+# LLM model files (too large for GitHub)
+*.gguf
+
+# Node
+node_modules/
 

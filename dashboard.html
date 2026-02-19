@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Promise</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/nav.css">
+<link rel="stylesheet" href="css/sections.css">
+<style>
+  .dash {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 56px 24px 64px;
+  }
+  .dash h1 { font-size: 32px; margin-bottom: 4px; }
+  .dash .sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+  .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 48px 0; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .card h3 {
+    font-size: 17px;
+    margin-bottom: 4px;
+  }
+  .card .content {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge.self { background: #ede9fe; color: #6d28d9; }
+  .badge.others { background: #dbeafe; color: #2563eb; }
+  .badge.world { background: #fef3c7; color: #b45309; }
+  .countdown {
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .countdown.urgent { color: #d44; }
+  .btn-sm {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--card);
+    background: #2a9d5c;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .btn-sm:hover { background: #238a4e; }
+  .btn-sm:disabled { opacity: 0.5; cursor: default; }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a class="wordmark" href="index.html">Promise<span class="dot">.</span></a>
+  <div class="nav-r">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="promise.html" class="btn">Make a Promise</a>
+  </div>
+</nav>
+
+<main>
+  <section class="dash">
+    <h1>Your promises<span class="dot">.</span></h1>
+    <p class="sub">Keep going. Every promise kept builds trust.</p>
+    <div id="list"></div>
+  </section>
+</main>
+
+<footer>
+  <span>&copy; 2026 Promise.</span>
+  <div><a href="#">Privacy</a><a href="#">Terms</a></div>
+</footer>
+
+<script>
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', scrollY > 10);
+  }, { passive: true });
+
+  const listEl = document.getElementById('list');
+  let promises = [];
+
+  function fmtTime(seconds) {
+    if (seconds <= 0) return '0s';
+    const d = Math.floor(seconds / 86400);
+    const h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    const parts = [];
+    if (d) parts.push(d + 'd');
+    if (h) parts.push(h + 'h');
+    if (m) parts.push(m + 'm');
+    if (s || !parts.length) parts.push(s + 's');
+    return parts.join(' ');
+  }
+
+  async function load() {
+    try {
+      const res = await fetch('/api/promises');
+      const data = await res.json();
+
+      // If there's a missed promise, redirect to reframe
+      if (data.missed) {
+        window.location.href = 'reframe.html?id=' + data.missed.id;
+        return;
+      }
+
+      promises = data.promises || [];
+      render();
+    } catch (err) {
+      listEl.innerHTML = '<p class="empty">Could not load promises. Is the backend running?</p>';
+    }
+  }
+
+  function render() {
+    if (!promises.length) {
+      listEl.innerHTML = '<p class="empty">No active promises yet. <a href="promise.html" style="color:var(--accent)">Make one</a>.</p>';
+      return;
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    listEl.innerHTML = promises.map(p => {
+      const left = Math.max(p.deadline_at - now, 0);
+      const urgent = left < 3600;
+      return `
+        <div class="card" data-id="${p.id}">
+          <div class="card-top">
+            <div>
+              <h3>${esc(p.name)}</h3>
+              <p class="content">${esc(p.content)}</p>
+              <div class="card-meta">
+                <span class="badge ${p.promise_type}">${p.promise_type}</span>
+                <span class="countdown${urgent ? ' urgent' : ''}" data-deadline="${p.deadline_at}">${fmtTime(left)}</span>
+              </div>
+            </div>
+            <button class="btn-sm" onclick="complete(${p.id}, this)">Complete</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  // Live countdown
+  setInterval(() => {
+    const now = Math.floor(Date.now() / 1000);
+    document.querySelectorAll('.countdown').forEach(el => {
+      const dl = parseInt(el.dataset.deadline);
+      const left = Math.max(dl - now, 0);
+      el.textContent = fmtTime(left);
+      el.classList.toggle('urgent', left < 3600);
+    });
+  }, 1000);
+
+  async function complete(id, btn) {
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      const res = await fetch(`/api/promises/${id}/complete`, { method: 'POST' });
+      if (!res.ok) throw new Error();
+      btn.textContent = 'Done!';
+      setTimeout(load, 600);
+    } catch {
+      btn.textContent = 'Error';
+      btn.disabled = false;
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

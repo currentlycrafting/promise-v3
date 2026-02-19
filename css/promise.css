@@ -1,0 +1,138 @@
+/* Promise creation page */
+
+.promise-page {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 56px 24px 64px;
+}
+
+.promise-page h1 {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+.promise-page .dot {
+  color: var(--accent);
+}
+
+.promise-page .sub {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 32px;
+}
+
+/* Form */
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+  border-color: var(--accent);
+}
+
+.form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-group .hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* Type pills */
+
+.type-pills {
+  display: flex;
+  gap: 8px;
+}
+
+.type-pill {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.type-pill:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.type-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Actions */
+
+.promise-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.promise-actions .btn {
+  padding: 10px 28px;
+  font-size: 14px;
+}
+
+.promise-actions .back {
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.promise-actions .back:hover {
+  color: var(--ink);
+}
+
+/* Status message */
+
+#status {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 20px;
+}
+
+#status.error {
+  color: #d44;
+}
+
+#status.success {
+  color: #2a9d5c;
+}
