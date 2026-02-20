@@ -28,9 +28,23 @@ build/
 *.log
 *.local
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
 # LLM model files (too large for GitHub)
 *.gguf
 
 # Node
 node_modules/
+
+# Vite cache
+.vite/
+
+# Claude Code
+.claude/
+
+# Generated docs
+recap.md
 

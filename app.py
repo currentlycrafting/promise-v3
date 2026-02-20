@@ -33,8 +33,45 @@ class Promise(Base):
     deadline_at = Column(Integer)
     status      = Column(String)
     hash_value  = Column(String)
+    participants = Column(String, nullable=True)
 
 Base.metadata.create_all(bind=engine)
+
+# ── Demo seed ────────────────────────────────────────────────────────────────
+
+def seed_demo_data():
+    db = SessionLocal()
+    try:
+        # Wipe all existing rows for a clean demo slate
+        db.query(Promise).delete()
+        db.commit()
+
+        # Seed fresh demo promises
+        now = int(time.time())
+        demos = [
+            ("Morning Run",          "self",   "I promise I will run 3 times a week",                          30, None),
+            ("Read Daily",           "self",   "I promise I will read 20 minutes every night",                 21, None),
+            ("Call Home",            "others", "I promise I will call my family every Sunday",                   7, None),
+            ("Check In Weekly",      "others", "I promise I will check in with a friend every week",            14, None),
+            ("Food Bank Volunteer",  "world",  "I promise I will volunteer at the food bank twice this month",  28, None),
+            ("Plastic Free Week",    "world",  "I promise I will go plastic-free for 7 days",                    7, None),
+            ("Gym with Khalid",      "others", "I promise I will go to the gym with Khalid every week",         21, "Khalid"),
+        ]
+        for name, ptype, content, days, participants in demos:
+            created = now
+            deadline = now + days * 86400
+            p = Promise(
+                name=name, promise_type=ptype, content=content,
+                created_at=created, deadline_at=deadline, status="ACTIVE",
+                hash_value=hashlib.sha256(f"0|{created}|{name}|{ptype}|{content}".encode()).hexdigest(),
+                participants=participants,
+            )
+            db.add(p)
+        db.commit()
+    finally:
+        db.close()
+
+seed_demo_data()
 
 # ── App ──────────────────────────────────────────────────────────────────────
 
@@ -139,6 +176,7 @@ def api_list_promises(db=Depends(get_db)):
                 "promise_type": p.promise_type, "status": p.status,
                 "deadline_at": p.deadline_at,
                 "time_left": getattr(p, "time_left", ""),
+                "participants": p.participants,
             }
             for p in active
         ],
@@ -146,7 +184,20 @@ def api_list_promises(db=Depends(get_db)):
             "id": missed.id, "name": missed.name, "content": missed.content,
             "promise_type": missed.promise_type, "status": missed.status,
             "deadline_at": missed.deadline_at,
+            "participants": missed.participants,
         } if missed else None,
+    }
+
+@app.get("/api/promises/{promise_id}")
+def api_get_promise(promise_id: int, db=Depends(get_db)):
+    p = db.query(Promise).filter(Promise.id == promise_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {
+        "id": p.id, "name": p.name, "content": p.content,
+        "promise_type": p.promise_type, "status": p.status,
+        "deadline_at": p.deadline_at,
+        "participants": p.participants,
     }
 
 @app.post("/api/promises")
@@ -190,6 +241,15 @@ def api_complete_promise(promise_id: int, db=Depends(get_db)):
     p.status = "COMPLETED"
     db.commit()
     return {"status": "completed"}
+
+@app.post("/api/promises/{promise_id}/forfeit")
+def api_forfeit_promise(promise_id: int, db=Depends(get_db)):
+    p = db.query(Promise).filter(Promise.id == promise_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Not found")
+    p.status = "MISSED"
+    db.commit()
+    return {"status": "missed"}
 
 @app.post("/api/reframe/{promise_id}/apply")
 def api_apply_reframe(

@@ -1,28 +1,117 @@
-/* Types row, footer, responsive */
+/* Shared section styles */
 
-.types {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 48px;
-  padding: 48px 48px 56px;
+.section-title {
+  font-size: 32px;
+  line-height: 1.2;
   text-align: center;
+  margin-bottom: 12px;
 }
 
-.types .sep {
-  color: var(--border);
-  font-size: 20px;
-  padding-top: 2px;
+.section-title .dot {
+  color: var(--accent);
 }
 
-.types h3 {
+.section-sub {
   font-size: 15px;
-  margin-bottom: 4px;
+  color: var(--muted);
+  text-align: center;
+  max-width: 520px;
+  margin: 0 auto 48px;
+  line-height: 1.6;
 }
 
-.types p {
+/* How It Works / AI Section */
+
+.how {
+  padding: 80px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.how-step {
+  padding: 28px 24px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.step-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  color: var(--accent);
+  margin-bottom: 14px;
+  line-height: 1;
+}
+
+.how-step h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.how-step p {
   font-size: 13px;
   color: var(--muted);
+  line-height: 1.6;
+}
+
+.ai-highlight {
+  background: var(--ink);
+  border-radius: 12px;
+  padding: 28px 32px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(244, 132, 95, 0.15);
+  color: var(--accent);
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+
+.ai-highlight p {
+  max-width: 700px;
+}
+
+/* CTA Section */
+
+.cta {
+  text-align: center;
+  padding: 80px 48px 96px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.cta h2 {
+  font-size: 30px;
+  line-height: 1.25;
+  margin-bottom: 14px;
+}
+
+.cta h2 .dot {
+  color: var(--accent);
+}
+
+.cta p {
+  font-size: 15px;
+  color: var(--muted);
+  margin-bottom: 28px;
+  line-height: 1.6;
 }
 
 /* Footer */
@@ -55,18 +144,35 @@ footer a:hover {
     padding: 40px 24px;
     gap: 32px;
   }
+  .hero-left h1 {
+    font-size: 36px;
+  }
   nav {
     padding: 14px 24px;
   }
-  .types {
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
+  .how {
+    padding: 56px 24px;
   }
-  .types .sep {
-    display: none;
+  .how-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .section-title {
+    font-size: 26px;
+  }
+  .cta {
+    padding: 56px 24px 72px;
+  }
+  .cta h2 {
+    font-size: 24px;
   }
   footer {
     padding: 18px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .how-grid {
+    grid-template-columns: 1fr;
   }
 }

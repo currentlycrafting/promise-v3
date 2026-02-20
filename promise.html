@@ -9,18 +9,93 @@
 <link rel="stylesheet" href="css/nav.css">
 <link rel="stylesheet" href="css/sections.css">
 <link rel="stylesheet" href="css/promise.css">
+<style>
+/* ── Loading animations ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes dot-pulse {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+@keyframes thinking-dots {
+  0%  { content: '.'; }
+  33% { content: '..'; }
+  66% { content: '...'; }
+}
+@keyframes fade-check {
+  0%   { opacity: 0; transform: scale(0.6); }
+  50%  { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+#commitBtn.loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+}
+#commitBtn.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 18px; height: 18px;
+  margin: -9px 0 0 -9px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+#commitBtn.thinking {
+  opacity: 0.7;
+  pointer-events: none;
+}
+#commitBtn.thinking .btn-text::after {
+  content: '.';
+  animation: thinking-dots 1.2s steps(3, end) infinite;
+}
+
+#commitBtn.saved .btn-text {
+  animation: fade-check 0.4s ease forwards;
+}
+
+.pulse-dots {
+  display: none;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.pulse-dots.visible { display: flex; }
+.pulse-dots span {
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+.pulse-dots span:nth-child(2) { animation-delay: 0.2s; }
+.pulse-dots span:nth-child(3) { animation-delay: 0.4s; }
+</style>
 </head>
 <body>
 
-<nav id="nav">
+<nav class="glass-nav" id="nav">
   <a class="wordmark" href="index.html">Promise<span class="dot">.</span></a>
-  <div class="nav-r">
-    <a href="dashboard.html">View Promises</a>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
     <a href="promise.html" class="btn">Make a Promise</a>
   </div>
 </nav>
+<style>
+.glass-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:16px 48px;background:rgba(250,248,245,0.72);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);border-bottom:1px solid rgba(232,228,223,0.5);transition:box-shadow .3s}
+.glass-nav.scrolled{box-shadow:0 4px 24px rgba(26,26,46,0.06)}
+.glass-nav .wordmark{font-family:'DM Serif Display',serif;font-size:20px;color:var(--ink);text-decoration:none}
+.glass-nav .wordmark .dot{color:var(--accent)}
+.glass-nav .nav-links{display:flex;align-items:center;gap:24px}
+.glass-nav .nav-links a{font-size:14px;color:var(--muted);text-decoration:none;font-weight:500;transition:color .2s}
+.glass-nav .nav-links a:hover{color:var(--ink)}
+</style>
 
-<main>
+<main style="padding-top:64px;">
   <section class="promise-page">
     <h1>Make a promise<span class="dot">.</span></h1>
     <p class="sub">What are you committing to?</p>
@@ -52,22 +127,22 @@
       </div>
 
       <div class="promise-actions">
-        <button type="submit" class="btn" id="commitBtn">Commit</button>
+        <button type="submit" class="btn" id="commitBtn"><span class="btn-text">Commit</span></button>
         <a href="index.html" class="back">Back</a>
       </div>
 
       <div id="status"></div>
+      <div class="pulse-dots" id="pulseDots"><span></span><span></span><span></span></div>
     </form>
   </section>
 </main>
 
-<footer>
+<footer class="site-footer" style="background:var(--ink);display:flex;justify-content:space-between;align-items:center;padding:18px 48px;font-size:12px;color:rgba(255,255,255,0.4)">
   <span>&copy; 2026 Promise.</span>
-  <div><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div><a href="#" style="color:rgba(255,255,255,0.4);text-decoration:none;margin-left:14px">Privacy</a><a href="#" style="color:rgba(255,255,255,0.4);text-decoration:none;margin-left:14px">Terms</a></div>
 </footer>
 
 <script type="module">
-  // Try importing LLM — if it fails (no model, no RunAnywhere), we fall back to direct submit
   let llm = null;
   try {
     llm = await import('./frontend/llm.js');
@@ -78,6 +153,8 @@
   const form = document.getElementById('promiseForm');
   const statusEl = document.getElementById('status');
   const commitBtn = document.getElementById('commitBtn');
+  const btnText = commitBtn.querySelector('.btn-text');
+  const pulseDots = document.getElementById('pulseDots');
 
   // Type pill selection
   document.querySelectorAll('.type-pill').forEach(pill => {
@@ -97,9 +174,49 @@
     statusEl.className = type || '';
   }
 
+  function setBtnState(state) {
+    commitBtn.classList.remove('loading', 'thinking', 'saved');
+    pulseDots.classList.remove('visible');
+    commitBtn.disabled = false;
+
+    if (state === 'loading') {
+      commitBtn.classList.add('loading');
+      commitBtn.disabled = true;
+      pulseDots.classList.add('visible');
+    } else if (state === 'thinking') {
+      commitBtn.classList.add('thinking');
+      commitBtn.disabled = true;
+      btnText.textContent = 'Thinking';
+    } else if (state === 'saving') {
+      commitBtn.classList.add('loading');
+      commitBtn.disabled = true;
+    } else if (state === 'saved') {
+      commitBtn.classList.add('saved');
+      commitBtn.disabled = true;
+      btnText.textContent = '\u2713';
+    } else {
+      btnText.textContent = 'Commit';
+    }
+  }
+
+  // Pre-load LLM in background
+  if (llm) {
+    setStatus('Loading AI model...');
+    setBtnState('loading');
+    llm.initLLM('/models/model.gguf', 'promise-model')
+      .then(() => {
+        setStatus('AI ready \u2014 faster next time.', 'success');
+        setBtnState('idle');
+        setTimeout(() => setStatus(''), 3000);
+      })
+      .catch(() => {
+        setStatus('AI unavailable, direct submit enabled.');
+        setBtnState('idle');
+      });
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    commitBtn.disabled = true;
 
     const title = document.getElementById('title').value.trim();
     const details = document.getElementById('details').value.trim();
@@ -108,7 +225,6 @@
 
     if (!title || !deadline) {
       setStatus('Please fill in the promise and deadline.', 'error');
-      commitBtn.disabled = false;
       return;
     }
 
@@ -118,9 +234,7 @@
     // If LLM is available, use it to format the promise
     if (llm) {
       try {
-        setStatus('Loading AI model...');
-        await llm.initLLM('/models/model.gguf', 'promise-model');
-
+        setBtnState('thinking');
         setStatus('Formatting your promise...');
         const rawText = details ? `${title}. ${details}` : title;
         const formatted = await llm.formatNewPromise(rawText);
@@ -136,6 +250,7 @@
 
     // POST to backend
     try {
+      setBtnState('saving');
       setStatus('Saving your promise...');
       const body = new FormData();
       body.append('name', name);
@@ -149,11 +264,12 @@
         throw new Error(err.detail || 'Failed to create promise');
       }
 
+      setBtnState('saved');
       setStatus('Promise created!', 'success');
       setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
     } catch (err) {
       setStatus(err.message, 'error');
-      commitBtn.disabled = false;
+      setBtnState('idle');
     }
   });
 </script>

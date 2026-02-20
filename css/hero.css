@@ -3,26 +3,34 @@
 .hero {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 48px;
+  gap: 56px;
   align-items: center;
-  padding: 72px 48px;
+  padding: 100px 48px 96px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .hero-left h1 {
-  font-size: 42px;
-  line-height: 1.15;
-  margin-bottom: 16px;
+  font-size: 56px;
+  line-height: 1.08;
+  margin-bottom: 24px;
+  letter-spacing: -0.5px;
 }
 
 .hero-left h1 .dot {
   color: var(--accent);
 }
 
-.hero-left p {
-  font-size: 16px;
+.hero-anchor {
+  font-size: 15px;
   color: var(--muted);
-  margin-bottom: 28px;
-  max-width: 400px;
+  margin-bottom: 36px;
+  max-width: 360px;
+  line-height: 1.65;
+}
+
+.btn-lg {
+  font-size: 14px;
+  padding: 12px 28px;
+  border-radius: 8px;
 }

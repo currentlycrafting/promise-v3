@@ -17,6 +17,9 @@ export default defineConfig({
       // Required for RunAnywhere SharedArrayBuffer (multi-threaded WASM)
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'credentialless',
+      // Cache heavy model + WASM assets
+      '*.wasm': { 'Content-Type': 'application/wasm', 'Cache-Control': 'public, max-age=31536000' },
+      '*.gguf': { 'Cache-Control': 'public, max-age=31536000' },
     },
     proxy: {
       // Forward all /api calls to FastAPI

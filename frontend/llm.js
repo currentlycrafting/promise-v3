@@ -6,12 +6,16 @@ import { LlamaCPP, TextGeneration } from '@runanywhere/web-llamacpp'
 import { LlamaCppBridge } from '@runanywhere/web-llamacpp/dist/Foundation/LlamaCppBridge'
 
 let initialized = false
+let modelReady = false
 
 export async function initLLM(modelUrl = '/models/model.gguf', modelId = 'promise-model') {
-  if (initialized) return
+  if (modelReady) return
 
-  await RunAnywhere.initialize({ environment: 'development', debug: true })
-  await LlamaCPP.register()
+  if (!initialized) {
+    await RunAnywhere.initialize({ environment: 'development', debug: true })
+    await LlamaCPP.register()
+    initialized = true
+  }
 
   // Fetch model file via HTTP and write to Emscripten virtual FS
   console.log('[Promise LLM] Fetching model from', modelUrl)
@@ -26,18 +30,28 @@ export async function initLLM(modelUrl = '/models/model.gguf', modelId = 'promis
 
   await TextGeneration.loadModel(wasmPath, modelId)
   console.log('[Promise LLM] Model loaded successfully')
-  initialized = true
+  modelReady = true
 }
 
 // ── Mirrors: refine_promise() in gemini_client.py ───────────────────────────
-export async function refinePromise(promise, reason, category) {
-  const prompt = `You are helping a user reframe a missed promise.
+export async function refinePromise(promise, reason, category, promiseType = 'self') {
+  const typeContext = promiseType === 'others'
+    ? 'This is a commitment to another person — solutions should still involve that person where possible.'
+    : promiseType === 'world'
+    ? 'This is a public or community commitment — solutions should maintain the outward-facing intent.'
+    : 'This is a personal goal — solutions should keep the self-improvement intent alive.'
 
-Original Promise: "${promise}"
-Reason for missing: ${reason}
-Failure Category: ${category}
+  const prompt = `You are helping someone mend a missed commitment, not abandon it.
 
-Generate THREE distinct solutions to help this person succeed:
+Original promise: "${promise}"
+Promise type: ${promiseType} (self = personal goal, others = commitment to someone, world = public commitment)
+Reason missed: ${reason}
+Failure category: ${category}
+
+${typeContext}
+
+First identify the underlying goal this person was working toward.
+Then generate THREE paths that still move toward that goal:
 
 1. Conservative Solution:
 - Revised promise: I promise I will ...
@@ -48,13 +62,13 @@ Generate THREE distinct solutions to help this person succeed:
 3. Progressive Solution:
 - Revised promise: I promise I will ...
 
-Rules:
-- Keep the core intent of the original promise
-- Be specific and actionable
-- Address the ${category} issue directly
-- Write the revised promise as a single short sentence starting with: I promise I will
-- Output plain text only: no quotes, no markdown, no code blocks
-- Sound friendly and human`
+Each solution must:
+- Start with "I promise I will"
+- Be specific and completable
+- Address the ${category} directly
+- Keep the core intent alive
+
+Output plain text only. No markdown. No quotes.`
 
   const result = await TextGeneration.generate(prompt, { maxTokens: 400, temperature: 0.7 })
   return result.text
