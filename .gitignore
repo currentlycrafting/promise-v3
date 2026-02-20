@@ -45,6 +45,10 @@ node_modules/
 # Claude Code
 .claude/
 
+# Personal images
+khalid1.jpg
+salman1.png
+
 # Generated docs
 recap.md
 
