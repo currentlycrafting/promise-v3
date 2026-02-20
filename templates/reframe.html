@@ -22,7 +22,7 @@
         <h2>Step 1: Why & Category</h2>
         <form action="/reframe/{{ promise.id }}/solutions" method="post">
           <label>Why did you miss this promise?</label>
-          <input type="text" name="reason" required />
+          <input type="text" name="reason" required autocomplete="off" />
           <label>Category</label>
           <select name="category" required>
             <option value="TIME_CONSTRAINT">TIME_CONSTRAINT</option>
