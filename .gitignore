@@ -1,54 +1,47 @@
-# don't want to push our API key
+# Environment files
 .env
 .env.*
-!.env.example
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-.venv/
-env/
-*.egg-info/
-.eggs/
-dist/
-build/
-
-# IDE / OS
+# OS / editor
+.DS_Store
 .idea/
 .vscode/
 *.swp
 *.swo
-.DS_Store
 
-# Logs and local config
+# Logs / local-only config
 *.log
 *.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Database files
+# Node dependencies and build artifacts
+node_modules/
+dist/
+build/
+.vite/
+
+# Python leftovers (legacy/local tooling)
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Databases and local app state
 *.db
 *.sqlite
 *.sqlite3
+data/
 
-# LLM model files (too large for GitHub)
+# User-generated uploads
+uploads/
+
+# LLM model files (too large for git)
 *.gguf
 
-# Node
-node_modules/
-
-# Vite cache
-.vite/
-
-# Claude Code
+# Cursor/agent workspace artifacts
 .claude/
-
-# Personal images
-khalid1.jpg
-salman1.png
-
-# Generated docs
 recap.md
 

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Make a Promise</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='12' fill='%23f4845f'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/nav.css">
+<link rel="stylesheet" href="/css/sections.css">
+<link rel="stylesheet" href="/css/promise.css">
+<link rel="stylesheet" href="/css/promise-page.css">
+
+</head>
+<body>
+
+<nav class="glass-nav" id="nav">
+  <a class="wordmark" href="/">Promise<span class="dot">.</span></a>
+  <div class="nav-links">
+    <a href="/dashboard">Dashboard</a>
+    <a href="/friends">Friends</a>
+    <a href="/profile">Profile</a>
+    <a href="/notifications" class="nav-bell" title="Notifications">
+      <span class="bell-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+      <span class="notif-badge" id="navNotifBadge" style="display:none;">0</span>
+    </a>
+    <a href="/promise" class="btn">Make a Promise</a>
+    <button type="button" class="nav-logout" id="logoutBtn">Logout</button>
+  </div>
+</nav>
+
+
+<main style="padding-top:64px;">
+  <section class="promise-page">
+    <h1>Make a promise<span class="dot">.</span></h1>
+    <p class="sub">What are you committing to?</p>
+
+    <form id="promiseForm">
+      <div class="form-group">
+        <label>Type</label>
+        <div class="type-pills">
+          <button type="button" class="type-pill active" data-type="self">Yourself</button>
+          <button type="button" class="type-pill" data-type="others">Others</button>
+          <button type="button" class="type-pill" data-type="world">The World</button>
+        </div>
+      </div>
+
+      <div class="form-group" id="friendsSelectGroup" style="display:none;">
+        <label>Add friends to this promise</label>
+        <p class="hint">Everyone selected will see this promise and must mark it complete.</p>
+        <div id="friendsCheckboxes" class="friends-checkboxes"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="title">Promise</label>
+        <input type="text" id="title" placeholder="Run a half marathon" required autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label for="details">Details (optional)</label>
+        <textarea id="details" placeholder="Any context or specifics you want to remember." autocomplete="off"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="deadline">Deadline</label>
+        <input type="text" id="deadline" placeholder="e.g. 2h, 7d, 1d 12h" required autocomplete="off">
+        <p class="hint">How long do you have? Use d (days), h (hours), m (minutes).</p>
+      </div>
+
+      <div class="form-group">
+        <label>Category (optional)</label>
+        <div class="option-pills" id="categoryPills">
+          <button type="button" class="option-pill" data-value="">None</button>
+          <button type="button" class="option-pill" data-value="Health">Health</button>
+          <button type="button" class="option-pill" data-value="Work">Work</button>
+          <button type="button" class="option-pill" data-value="Personal">Personal</button>
+          <button type="button" class="option-pill" data-value="Social">Social</button>
+          <button type="button" class="option-pill" data-value="Learning">Learning</button>
+          <button type="button" class="option-pill" data-value="Other">Other</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Recurring (optional)</label>
+        <div class="option-pills" id="recurrencePills">
+          <button type="button" class="option-pill active" data-value="">One-time</button>
+          <button type="button" class="option-pill" data-value="daily">Daily</button>
+          <button type="button" class="option-pill" data-value="weekly">Weekly</button>
+          <button type="button" class="option-pill" data-value="monthly">Monthly</button>
+        </div>
+        <p class="hint">When you complete this, a new instance will be created for the next period.</p>
+      </div>
+
+      <div class="form-group">
+        <label>Visibility</label>
+        <div class="option-pills" id="visibilityPills">
+          <button type="button" class="option-pill active" data-value="private">Private</button>
+          <button type="button" class="option-pill" data-value="friends">Friends</button>
+          <button type="button" class="option-pill" data-value="public">Public</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Progress (optional)</label>
+        <div class="progress-row">
+          <input type="text" id="progress_manual" placeholder="e.g. 1/20 or 20">
+        </div>
+        <p class="hint-inline">Example: 1 / 20 means you already did 1 out of 20.</p>
+      </div>
+
+      <div class="promise-actions">
+        <button type="submit" class="btn" id="commitBtn"><span class="btn-text">Commit</span></button>
+        <a href="/dashboard" class="back">Back</a>
+      </div>
+
+      <div id="status"></div>
+      <div class="pulse-dots" id="pulseDots"><span></span><span></span><span></span></div>
+    </form>
+
+    <!-- AI Loading -->
+    <div class="ai-loading" id="aiLoading">
+      <div class="ai-orb"></div>
+      <div class="ai-text">
+        <strong>AI is thinking</strong>
+        Crafting and formatting your promise...
+      </div>
+      <div class="ai-dots"><span></span><span></span><span></span></div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer" style="background:var(--ink);display:flex;justify-content:space-between;align-items:center;padding:18px 48px;font-size:12px;color:rgba(255,255,255,0.4)">
+  <span>&copy; 2026 Promise.</span>
+  <div><a href="#" style="color:rgba(255,255,255,0.4);text-decoration:none;margin-left:14px">Privacy</a><a href="#" style="color:rgba(255,255,255,0.4);text-decoration:none;margin-left:14px">Terms</a></div>
+</footer>
+
+<script type="module" src="/frontend/pages/promise.page.js"></script>
+</body>
+</html>

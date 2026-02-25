@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reframe — Promise</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='12' fill='%23f4845f'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/reframe.css">
+
+</head>
+<body>
+
+<nav class="glass-nav" id="nav">
+  <a class="wordmark" href="/">Promise<span class="dot">.</span></a>
+  <div class="nav-links">
+    <a href="/dashboard">Dashboard</a>
+    <a href="/friends">Friends</a>
+    <a href="/profile">Profile</a>
+    <a href="/promise" class="btn">Make a Promise</a>
+  </div>
+</nav>
+
+<main>
+  <section class="reframe">
+    <!-- Header -->
+    <div class="reframe-header">
+      <h1>Let's reshape this<span class="dot">.</span></h1>
+      <p class="sub">Missing a deadline isn't failure. It's a signal to adjust. The AI will help you find a better path.</p>
+    </div>
+
+    <!-- Promise Card -->
+    <div class="promise-card" id="missedCard">
+      <span class="state-tag">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+        Needs a reset
+      </span>
+      <h3 id="missedName">Loading...</h3>
+      <p id="missedContent"></p>
+    </div>
+
+    <!-- Step 1: Reason + Category -->
+    <div id="step1">
+      <div class="form-group">
+        <label for="reason">What happened?</label>
+        <input type="text" id="reason" placeholder="e.g. I ran out of time this week" required autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="category">What best describes it?</label>
+        <select id="category">
+          <option value="TIME_CONSTRAINT">Time constraint</option>
+          <option value="RESOURCE_LIMITATION">Resource limitation</option>
+          <option value="EXTERNAL_FACTORS">External factors</option>
+          <option value="MOTIVATION_LOSS">Motivation loss</option>
+          <option value="UNCLEAR_GOALS">Unclear goals</option>
+          <option value="OVERCOMMITMENT">Overcommitment</option>
+          <option value="SKILL_GAP">Skill gap</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button class="btn" id="generateBtn">Generate Solutions</button>
+        <a href="/dashboard" class="back-link">Back to dashboard</a>
+      </div>
+      <div id="status"></div>
+    </div>
+
+    <!-- AI Loading -->
+    <div class="ai-loading" id="aiLoading">
+      <div class="ai-orb"></div>
+      <div class="ai-text">
+        <strong>AI is thinking</strong>
+        Analyzing your promise and finding better paths forward...
+      </div>
+      <div class="ai-dots"><span></span><span></span><span></span></div>
+    </div>
+
+    <!-- Step 2: Pick a solution -->
+    <div class="solutions-wrap" id="step2">
+      <h2>Pick a path forward<span class="dot">.</span></h2>
+      <p class="solutions-intro">The AI generated three ways to reshape your promise. Choose the one that feels right.</p>
+      <div id="solutionsList"></div>
+      <div class="actions">
+        <button class="btn" id="applyBtn" disabled>Apply Solution</button>
+        <button class="back-link" id="backBtn" style="border:none;background:none;cursor:pointer;font-size:14px;color:var(--muted)">Try again</button>
+        <a href="/dashboard" class="back-link">Back to dashboard</a>
+      </div>
+      <div id="status2"></div>
+    </div>
+
+    <!-- Success -->
+    <div class="reframe-success" id="successState">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+      <h2>Promise reframed!</h2>
+      <p>You didn't give up — you adapted. That's what mending looks like.</p>
+      <p class="redirect-text">Redirecting to your dashboard...</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <span>&copy; 2026 Promise.</span>
+  <div><a href="#">Privacy</a><a href="#">Terms</a></div>
+</footer>
+
+<script type="module" src="/frontend/pages/reframe.page.js"></script>
+</body>
+</html>

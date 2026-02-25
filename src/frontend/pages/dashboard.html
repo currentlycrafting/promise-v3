@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Promise</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='12' fill='%23f4845f'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+
+<div id="reminderToast" class="reminder-toast" style="display:none;">
+  <span id="reminderToastMsg"></span>
+  <a href="/dashboard" id="reminderToastLink">View</a>
+  <button type="button" class="reminder-toast-dismiss" id="reminderToastDismiss">&times;</button>
+</div>
+<nav class="glass-nav" id="nav">
+  <a class="wordmark" href="/">Promise<span class="dot">.</span></a>
+  <div class="nav-links">
+    <a href="/dashboard">Dashboard</a>
+    <a href="/friends">Friends</a>
+    <a href="/profile">Profile</a>
+    <a href="/notifications" class="nav-bell" title="Notifications">
+      <span class="bell-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+      <span class="notif-badge" id="navNotifBadge" style="display:none;">0</span>
+    </a>
+    <a href="/promise" class="btn">Make a Promise</a>
+    <button type="button" class="nav-logout" id="logoutBtn">Logout</button>
+  </div>
+</nav>
+
+<div class="dash-wrap">
+  <!-- Sidebar: current user from /me -->
+  <aside class="sidebar">
+    <div class="avatar" id="sidebarAvatar"><span class="avatar-initials">—</span></div>
+    <div class="name" id="sidebarName">—</div>
+    <p class="bio" id="sidebarBio"></p>
+    <div class="stats">
+      <div class="stat-row">
+        <span class="label">Total promises</span>
+        <span class="value" id="statTotal">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Kept so far</span>
+        <span class="value" id="statKept">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Active</span>
+        <span class="value" id="statActive">—</span>
+      </div>
+      <div class="stat-row" id="statScoreRow" style="display:none;">
+        <span class="label">Accountability</span>
+        <span class="value" id="statScore">—</span>
+      </div>
+    </div>
+    <p class="stat-sub" id="statSub"></p>
+  </aside>
+
+  <!-- Main -->
+  <main class="content">
+    <h2>Your promises<span class="dot">.</span></h2>
+    <p class="sub-heading">Keep going. Every promise kept builds trust.</p>
+    <div id="list"></div>
+
+    <!-- Activity feed -->
+    <div class="activity" id="activitySection">
+      <h3>Recent activity</h3>
+      <div id="activityFeed" class="activity-feed"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Comments modal -->
+<div id="commentsModal" class="comments-modal" style="display:none;" aria-hidden="true">
+  <div class="comments-modal-backdrop"></div>
+  <div class="comments-modal-panel">
+    <div class="comments-modal-header">
+      <h3 id="commentsModalTitle">Comments</h3>
+      <button type="button" class="comments-modal-close" id="commentsModalClose">&times;</button>
+    </div>
+    <div id="commentsModalList" class="comments-modal-list"></div>
+    <div class="comments-modal-add">
+      <textarea id="commentsModalInput" placeholder="Add a comment..." rows="2"></textarea>
+      <input type="hidden" id="commentsModalReplyTo" value="">
+      <button type="button" class="btn btn-sm" id="commentsModalSubmit">Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit promise modal -->
+<div id="editModal" class="comments-modal" style="display:none;" aria-hidden="true">
+  <div class="comments-modal-backdrop" data-close="editModal"></div>
+  <div class="comments-modal-panel">
+    <div class="comments-modal-header">
+      <h3>Edit promise</h3>
+      <button type="button" class="comments-modal-close" id="editModalClose">&times;</button>
+    </div>
+    <div class="comments-modal-list">
+      <div class="form-group"><label>Name</label><input type="text" id="editName" class="edit-input"></div>
+      <div class="form-group"><label>Details</label><textarea id="editContent" class="edit-input" rows="3"></textarea></div>
+      <div class="form-group"><label>Deadline (e.g. 7d, 2h)</label><input type="text" id="editDeadline" class="edit-input" placeholder="7d"></div>
+    </div>
+    <div class="comments-modal-add">
+      <button type="button" class="btn" id="editModalSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span>&copy; 2026 Promise.</span>
+  <div><a href="#">Privacy</a><a href="#">Terms</a></div>
+</footer>
+
+<script src="/frontend/pages/dashboard.inline.js"></script>
+</body>
+</html>

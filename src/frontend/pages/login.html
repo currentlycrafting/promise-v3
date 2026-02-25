@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Promise</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='12' fill='%23f4845f'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+<style>
+  body {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: var(--bg);
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .card {
+    width: min(92vw, 420px);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 14px 40px rgba(26, 26, 46, 0.08);
+    text-align: center;
+  }
+  h1 {
+    margin: 0 0 10px 0;
+    font-family: 'DM Serif Display', serif;
+    font-size: 34px;
+    color: var(--ink);
+  }
+  .dot { color: var(--accent); }
+  p {
+    margin: 0 0 18px 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  #googleButton {
+    display: grid;
+    place-items: center;
+    margin-top: 8px;
+  }
+  .btn {
+    display: inline-block;
+    margin-top: 12px;
+  }
+  #msg {
+    min-height: 18px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <section class="card">
+    <h1>Promise<span class="dot">.</span></h1>
+    <p>Sign in to continue.</p>
+    <div id="googleButton"></div>
+    <button id="devBtn" class="btn" type="button" style="display:none;">Continue in dev mode</button>
+    <div id="msg"></div>
+  </section>
+
+<script>
+  const msgEl = document.getElementById('msg');
+  const devBtn = document.getElementById('devBtn');
+
+  function setMsg(text, isError = false) {
+    msgEl.textContent = text || '';
+    msgEl.style.color = isError ? '#b42318' : 'var(--muted)';
+  }
+
+  async function postGoogleToken(token) {
+    const res = await fetch('/auth/google', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Sign-in failed');
+    window.location.href = '/profile';
+  }
+
+  async function initLogin() {
+    try {
+      const meRes = await fetch('/me', { credentials: 'include' });
+      if (meRes.ok) {
+        window.location.href = '/profile';
+        return;
+      }
+    } catch (_) {}
+
+    let cfg = {};
+    try {
+      const cfgRes = await fetch('/config', { credentials: 'include' });
+      cfg = await cfgRes.json();
+    } catch (_) {}
+
+    const clientId = cfg.client_id || null;
+    if (!clientId) {
+      setMsg('Google Sign-In is not configured. Dev mode is available.');
+      devBtn.style.display = 'inline-block';
+      return;
+    }
+
+    if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+      setMsg('Google script failed to load. Refresh and try again.', true);
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: async (response) => {
+        if (!response.credential) return setMsg('No credential received.', true);
+        setMsg('Signing you in...');
+        try {
+          await postGoogleToken(response.credential);
+        } catch (e) {
+          setMsg(e.message || 'Sign-in failed', true);
+        }
+      },
+    });
+    window.google.accounts.id.renderButton(
+      document.getElementById('googleButton'),
+      { theme: 'outline', size: 'large', width: 280 }
+    );
+  }
+
+  devBtn.addEventListener('click', async () => {
+    setMsg('Signing in (dev)...');
+    try {
+      const res = await fetch('/auth/dev', { method: 'POST', credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Dev login failed');
+      window.location.href = '/profile';
+    } catch (e) {
+      setMsg(e.message || 'Dev login failed', true);
+    }
+  });
+
+  initLogin();
+</script>
+</body>
+</html>

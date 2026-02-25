@@ -5,6 +5,104 @@ Promise Tracker is a commitment accountability platform that enables users to ma
 
 ---
 
+## Project Structure
+
+The app now uses a `src/`-first layout:
+
+- `src/server.js` – Express entrypoint
+- `src/backend/**` – backend routes, DB helpers, middleware, shared libs
+- `src/frontend/pages/**` – HTML pages
+- `src/frontend/css/**` – stylesheets
+- `src/frontend/js/**` – browser JavaScript modules
+- `src/frontend/public/**` – static model/wasm assets
+- `data/` – local SQLite data (git-ignored)
+- `uploads/` – user avatar uploads (git-ignored)
+
+---
+
+## Environment & Google OAuth
+
+Create a `.env` file in the project root and set:
+
+- **PORT** – Server port (commonly `8000`, default is whatever `PORT` resolves to in server config).
+- **DATABASE_PATH** – Optional custom SQLite file path (defaults to `data/promises.db`).
+- **GOOGLE_CLIENT_ID** – Web application client ID from [Google Cloud Console](https://console.cloud.google.com/) (APIs & Services → Credentials → Create OAuth 2.0 Client ID → Web application).
+- **GOOGLE_CLIENT_SECRET** – Same client secret (used only for server-side flows; not exposed to the frontend).
+- **SESSION_SECRET** – Random string for signing session cookies (e.g. `openssl rand -hex 32`).
+
+**Google Cloud:** Add **Authorized JavaScript origins** for your backend and frontend (e.g. `http://localhost:8000`, `http://localhost:5173`). No redirect URI is required for the ID-token-only sign-in flow.
+
+**If you see "OAuth client was not found" or "Error 401: invalid_client":** This app uses **Google Identity Services (GIS)** with an ID token (no redirect). Fix it as follows:
+
+1. **Create the right client type**  
+   [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**.  
+   Application type: **Web application** (do **not** use Desktop, Android, or Chrome app).
+
+2. **Authorized JavaScript origins** (required)  
+   In that OAuth client, under **Authorized JavaScript origins**, add **exactly** the origin where the login page loads (no trailing slash):
+   - `http://localhost:8000`  
+   If you sometimes use 127.0.0.1, also add:
+   - `http://127.0.0.1:8000`  
+   If your frontend runs on another port (e.g. Vite on 5173), add that origin too (e.g. `http://localhost:5173`).
+
+3. **Use the Client ID in `.env`**  
+   In Credentials, copy the **Client ID** (long string ending in `.apps.googleusercontent.com`). Put it in `.env` as:
+   ```bash
+   GOOGLE_CLIENT_ID=that-full-client-id.apps.googleusercontent.com
+   ```
+   Do **not** put the Client **secret** in `GOOGLE_CLIENT_ID`. No spaces or quotes around the value.
+
+4. **Redirect URIs**  
+   For this GIS/ID-token flow you do **not** need to add Authorized redirect URIs. If the console forces one, you can add `http://localhost:8000`; the app does not use it.
+
+5. **Same project**  
+   Ensure the OAuth client exists in the same Google Cloud project shown in the top bar of the console.
+
+Restart the server after changing `.env`, then reload the login page.
+
+**Auth flow:** Frontend gets a Google ID token via Google Identity Services (GIS), sends it to `POST /auth/google`; backend verifies the token, creates/updates a user, and starts an HTTP-only session. Use `credentials: 'include'` on all API requests so the session cookie is sent.
+
+---
+
+## How to run (Node/Express backend)
+
+The backend is **Node.js + Express** (Google OAuth replication guide). No Python/uvicorn.
+
+1. **Go to the project directory**
+   ```bash
+   cd /path/to/promise-backend-v2
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment**
+   - Create a `.env` file in the project root with at least:
+    - `PORT=8000`
+     - `SESSION_SECRET=` (random string, e.g. `openssl rand -hex 32`)
+     - `GOOGLE_CLIENT_ID=` (Web client ID from Google Cloud) for Google Sign-In, or leave empty to use “Continue as dev user” on the login page.
+
+4. **Start the server**
+   ```bash
+   npm start
+   ```
+   Or with auto-reload on file changes:
+   ```bash
+   npm run dev
+   ```
+
+5. **Open the app**
+   - In the browser go to **http://localhost:8000**
+   - You’ll be redirected to `/login`; sign in with Google (or “Continue as dev user” if `GOOGLE_CLIENT_ID` is not set).
+   - Then use `/dashboard` and the rest of the app.
+
+**Optional – frontend on another port (e.g. Vite on 5173):**  
+Run the Vite app separately and set its API base to `http://localhost:8000`. Ensure `http://localhost:5173` is in the backend CORS allowed origins and in Google Cloud “Authorized JavaScript origins”.
+
+---
+
 ## Core Concepts
 
 ### Promise Types
